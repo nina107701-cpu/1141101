@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>心跳模擬器</title>
+</head>
+<body style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;background:#111;color:#fff;font-family:sans-serif;">
+  <h1>💜 心跳模擬器</h1>
+  <button id="startCalm" style="padding:10px 20px;font-size:18px;cursor:pointer;">平靜模式</button>
+  <button id="startNervous" style="padding:10px 20px;font-size:18px;margin-top:10px;cursor:pointer;">緊張模式</button>
+  <button id="stopBtn" style="padding:10px 20px;font-size:18px;margin-top:10px;cursor:pointer;">停止</button>
+
+  <script>
+    let audioCtx;
+    let intervalId;
+
+    function playHeartbeat(interval = 1000) {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+
+      // 模擬心跳 "咚"
+      function beat() {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+
+        osc.type = "sine"; // 正弦波
+        osc.frequency.setValueAtTime(60, audioCtx.currentTime); // 低頻 60Hz
+
+        gain.gain.setValueAtTime(0, audioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(1, audioCtx.currentTime + 0.05);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.3);
+      }
+
+      // 模擬雙心跳：咚-咚
+      beat();
+      setTimeout(beat, 300);
+    }
+
+    function startMode(interval) {
+      if (intervalId) clearInterval(intervalId);
+      playHeartbeat(interval);
+      intervalId = setInterval(() => playHeartbeat(interval), interval);
+    }
+
+    document.getElementById("startCalm").onclick = () => startMode(1000); // 平靜：1秒
+    document.getElementById("startNervous").onclick = () => startMode(600); // 緊張：0.6秒
+
+    document.getElementById("stopBtn").onclick = () => {
+      clearInterval(intervalId);
+      intervalId = null;
+    };
+  </script>
+</body>
+</html>
